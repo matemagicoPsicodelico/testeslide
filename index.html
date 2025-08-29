@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perguntas e Respostas do Jogo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f4f8, #c8d8e8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+            overflow: hidden;
+        }
+
+        .slider-container {
+            position: relative;
+            width: 80%;
+            max-width: 700px;
+            height: 500px;
+            overflow: hidden;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            background-color: #fff;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            box-sizing: border-box;
+            text-align: center;
+            transform: translateX(100%);
+            transition: transform 0.6s ease-in-out;
+            opacity: 0;
+        }
+
+        .slide.active {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .slide.prev {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        h2 {
+            color: #0056b3;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        
+        h3 {
+            color: #007BFF;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-size: 1.5em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .answer {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #28a745;
+            line-height: 1.6;
+        }
+
+        .nav-buttons {
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 12px 25px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slider-container">
+        </div>
+
+    <script>
+        const allQuestions = [
+            { q: 'Você comprou uma pizza por R$ 45,50 e deu R$ 50,00. Quanto de troco deve receber?', a: 4.50 },
+            { q: 'Em uma festa, 3/4 do bolo foi consumido. O bolo tinha 12 fatias. Quantas fatias restaram?', a: 3 },
+            { q: 'O elevador está no 5º andar. Desce 7 andares e sobe 3. Em qual andar ele está?', a: 1 },
+            { q: 'A receita pede 1/2 xícara de farinha. Para fazer a metade da receita, quanta farinha precisa?', a: 0.25 },
+            { q: 'A temperatura era de 15°C e caiu 10°C. Depois, subiu 5°C. Qual a temperatura atual?', a: 10 },
+            { q: 'Um atleta correu 2,5 km e 3,75 km. Quantos km ele correu no total?', a: 6.25 },
+            { q: 'Você tem R$ 100,00 e gasta 1/4 do valor. Quanto dinheiro sobrou?', a: 75 },
+            { q: 'Seu celular tem 80% de bateria e você usa 1/5 dessa carga. Com quantos % você fica?', a: 64 },
+            { q: 'Um termômetro marca -3°C e a temperatura sobe 8°C. Qual a nova temperatura?', a: 5 },
+            { q: 'Uma ação perdeu 2/5 do valor de R$ 50,00. Qual o novo valor?', a: 30 },
+            { q: 'A conta de luz deu R$ 120,00. Sua parte é de 1/3 do total. Quanto você deve pagar?', a: 40 },
+            { q: 'Você tem R$ 50,00 e quer comprar doces de R$ 2,50 cada. Quantos doces você pode comprar?', a: 20 },
+            { q: 'O saldo da sua conta é de R$ -15,00. Você deposita R$ 20,00. Qual o novo saldo?', a: 5 },
+            { q: 'Você comprou 4 cadernos por R$ 3,50 cada. Quanto gastou no total?', a: 14 },
+            { q: 'Um relógio adianta 2 minutos a cada hora. Em 12 horas, quantos minutos ele terá adiantado?', a: 24 },
+            { q: 'Em um jogo, você perde 10 pontos e depois ganha 25. Qual a sua pontuação final se você começou com 0?', a: 15 },
+            { q: 'Você tem 1/2 litro de suco e bebe 1/4 dele. Quanto suco sobrou?', a: 0.375 },
+            { q: 'Se o preço de um pão de queijo é R$ 2,00, qual o preço de uma dúzia (12) deles?', a: 24 },
+            { q: 'Seu salário é de R$ 2.000,00 e você gastou 1/10 com o aluguel. Quanto sobrou?', a: 1800 },
+            { q: 'Um submarino desceu 50 metros. Ele subiu 20 metros e desceu mais 10. Em que profundidade ele está?', a: -40 },
+        ];
+
+        const sliderContainer = document.querySelector('.slider-container');
+        let currentIndex = 0;
+
+        function createSlides() {
+            allQuestions.forEach((item, index) => {
+                // Slide de Pergunta
+                const questionSlide = document.createElement('div');
+                questionSlide.classList.add('slide');
+                questionSlide.dataset.index = index * 2;
+                questionSlide.innerHTML = `
+                    <h2>Pergunta ${index + 1}</h2>
+                    <p class="question">${item.q}</p>
+                    <div class="nav-buttons">
+                        <button class="nav-btn prev-btn">Anterior</button>
+                        <button class="nav-btn next-btn">Próximo</button>
+                    </div>
+                `;
+                sliderContainer.appendChild(questionSlide);
+
+                // Slide de Resposta
+                const answerSlide = document.createElement('div');
+                answerSlide.classList.add('slide');
+                answerSlide.dataset.index = index * 2 + 1;
+                answerSlide.innerHTML = `
+                    <h3>Resposta ${index + 1}</h3>
+                    <p class="question">${item.q}</p>
+                    <p class="answer">Resposta: ${item.a}</p>
+                    <div class="nav-buttons">
+                        <button class="nav-btn prev-btn">Anterior</button>
+                        <button class="nav-btn next-btn">Próximo</button>
+                    </div>
+                `;
+                sliderContainer.appendChild(answerSlide);
+            });
+        }
+
+        function showSlide(index) {
+            const slides = document.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+
+            slides.forEach(slide => {
+                slide.classList.remove('active', 'prev');
+            });
+
+            if (index < 0) {
+                currentIndex = 0;
+            } else if (index >= totalSlides) {
+                currentIndex = totalSlides - 1;
+            } else {
+                currentIndex = index;
+            }
+
+            const activeSlide = document.querySelector(`.slide[data-index="${currentIndex}"]`);
+            if (activeSlide) {
+                activeSlide.classList.add('active');
+            }
+
+            // Atualiza o estado dos botões
+            const prevBtn = activeSlide.querySelector('.prev-btn');
+            const nextBtn = activeSlide.querySelector('.next-btn');
+
+            if (prevBtn) {
+                prevBtn.disabled = currentIndex === 0;
+            }
+            if (nextBtn) {
+                nextBtn.disabled = currentIndex === totalSlides - 1;
+            }
+        }
+
+        sliderContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('next-btn')) {
+                showSlide(currentIndex + 1);
+            } else if (e.target.classList.contains('prev-btn')) {
+                showSlide(currentIndex - 1);
+            }
+        });
+
+        createSlides();
+        showSlide(0); // Mostra o primeiro slide ao carregar
+    </script>
+</body>
+</html>
